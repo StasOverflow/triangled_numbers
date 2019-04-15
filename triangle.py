@@ -58,10 +58,11 @@ class Node:
         return self.value + child_value
 
     def __repr__(self):
+        indexed = True
         # Uncomment to turn on index display
-        indexed = False
+        # indexed = False
         if indexed:
-            string = ('(' + '{:>2}'.format(self.depth) + ',' + '{:>2}'.format(self.depth) + ') ')
+            string = ('(' + '{:>2}'.format(self.depth) + ',' + '{:>2}'.format(self.index) + ') ')
         else:
             string = ''
         string += '{:>4}'.format(self.value)
@@ -73,8 +74,9 @@ class NumberTriangle:
     def __init__(self, number_list_of_lists=None, max_depth=3, randomize=True):
         self.sequence_list = list()
         if number_list_of_lists:
-            for sub_list in number_list_of_lists:
-                sequence = [Node(value=value) for value in sub_list]
+            for dimension, sub_list in enumerate(number_list_of_lists):
+                sequence = [Node(value=value,
+                                 depth=dimension, index=index) for index, value in enumerate(sub_list)]
                 self.sequence_list.append(sequence)
         elif randomize:
             # +1 here, because 0th dimension cannot be iterated, so start with 1
@@ -87,8 +89,8 @@ class NumberTriangle:
             value = 0
             for dimension in range(max_depth):
                 sequence = list()
-                for cell in range(dimension):
-                    sequence.append(Node(value=value))
+                for index in range(dimension):
+                    sequence.append(Node(value=value, depth=dimension, index=index))
                     value += 1
                 self.sequence_list.append(sequence)
         self._bind_children()
