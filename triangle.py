@@ -58,14 +58,17 @@ class Node:
         return self.value + child_value
 
     def __repr__(self):
-        indexed = True
-        # Uncomment to turn on index display
-        # indexed = False
+        indexed = False
         if indexed:
             string = ('(' + '{:>2}'.format(self.depth) + ',' + '{:>2}'.format(self.index) + ') ')
         else:
             string = ''
         string += '{:>4}'.format(self.value)
+        return string
+
+    def __str__(self):
+        string = '{:>4}'.format(self.value) + '\n'
+        string += '{:>4}'.format(self.left_child.value) + ' ' + '{:>4}'.format(self.right_child.value)
         return string
 
 
@@ -96,7 +99,10 @@ class NumberTriangle:
         self._bind_children()
 
     def _bind_children(self):
-        for index, sequence in enumerate(self.sequence_list[:-1]):
+        for sequence_num, sequence in enumerate(self.sequence_list[:-1]):
+            for index, node in enumerate(sequence):
+                node.left_child_insert(self.sequence_list[sequence_num + 1][index])
+                node.right_child_insert(self.sequence_list[sequence_num + 1][index + 1])
             # print(index)
             pass
 
@@ -111,6 +117,7 @@ class NumberTriangle:
 if __name__ == '__main__':
     triangle = NumberTriangle(max_depth=15)
     print(triangle)
+    print(triangle.sequence_list[3][1])
 
     new_triangle = NumberTriangle(number_list_of_lists=[[14], [64, 100], [94, 95, 69]])
     print(new_triangle)
