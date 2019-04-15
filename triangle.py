@@ -68,7 +68,8 @@ class Node:
 
     def __str__(self):
         string = '{:>4}'.format(self.value) + '\n'
-        string += '{:>4}'.format(self.left_child.value) + ' ' + '{:>4}'.format(self.right_child.value)
+        if self.has_children:
+            string += '{:>4}'.format(self.left_child.value) + ' ' + '{:>4}'.format(self.right_child.value)
         return string
 
 
@@ -117,7 +118,8 @@ class NumberTriangle:
 if __name__ == '__main__':
     triangle = NumberTriangle(max_depth=15)
     print(triangle)
-    print(triangle.sequence_list[3][1])
+    print(triangle.sequence_list[4][1])
+    print(triangle.sequence_list[13][1])
 
     new_triangle = NumberTriangle(number_list_of_lists=[[14], [64, 100], [94, 95, 69]])
     print(new_triangle)
