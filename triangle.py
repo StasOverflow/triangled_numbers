@@ -57,40 +57,61 @@ class Node:
 
         return self.value + child_value
 
+    def __repr__(self):
+        # Uncomment to turn on index display
+        indexed = False
+        if indexed:
+            string = ('(' + '{:>2}'.format(self.depth) + ',' + '{:>2}'.format(self.depth) + ') ')
+        else:
+            string = ''
+        string += '{:>4}'.format(self.value)
+        return string
+
 
 class NumberTriangle:
 
-    def __init__(self, number_list_of_lists=None, max_dimensions=3, randomize=True):
+    def __init__(self, number_list_of_lists=None, max_depth=3, randomize=True):
         self.sequence_list = list()
         if number_list_of_lists:
             for sub_list in number_list_of_lists:
-                self.sequence_list.append(sub_list)
+                sequence = [Node(value=value) for value in sub_list]
+                self.sequence_list.append(sequence)
         elif randomize:
-            for dimension in range(max_dimensions + 1):
+            # +1 here, because 0th dimension cannot be iterated, so start with 1
+            for dimension in range(max_depth):
                 if dimension:
-                    sequence = [randint(-100, 100) for _ in range(dimension)]
+                    sequence = [Node(value=randint(0, 100),
+                                     depth=dimension-1, index=index) for index in range(dimension)]
                     self.sequence_list.append(sequence)
         else:
             value = 0
-            for dimension in range(max_dimensions):
+            for dimension in range(max_depth):
                 sequence = list()
                 for cell in range(dimension):
-                    sequence.append(value)
+                    sequence.append(Node(value=value))
                     value += 1
                 self.sequence_list.append(sequence)
+        self._bind_children()
+
+    def _bind_children(self):
+        for index, sequence in enumerate(self.sequence_list[:-1]):
+            # print(index)
+            pass
 
     def __str__(self):
         string = 'Triangle\n'
-        string += str([sequence for sequence in self.sequence_list])
+        for sequence in self.sequence_list:
+            string += str(sequence) + '\n'
         string += '\n' + '-' * 50
         return string
 
 
 if __name__ == '__main__':
-    triangle = NumberTriangle(max_dimensions=15)
+    triangle = NumberTriangle(max_depth=15)
     print(triangle)
 
-    new_triangle = NumberTriangle(number_list_of_lists=[[-14], [-64, -100], [-94, 95, 69]])
+    new_triangle = NumberTriangle(number_list_of_lists=[[14], [64, 100], [94, 95, 69]])
     print(new_triangle)
 
+    # new_triangle.calculate_sum()
 
