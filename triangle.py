@@ -3,36 +3,33 @@ from random import randint
 
 class Node:
 
-    def __init__(self, value=0, index=0, depth=0,
-                 left_child=None, right_child=None):
-        self.value = value
+    def __init__(self, number=0, index=0, depth=0):
+        self._data = number
         self.index = index
         self.depth = depth
-        self.left_child = left_child
-        self.right_child = right_child
-        self.most_valuable_child = None
+        self.left_child = None
+        self.right_child = None
+        self.bigger_child = None
+        self.most_efficient_route = None
 
     @property
-    def value(self):
-        return self._value
+    def data(self):
+        return self._data
 
-    @value.setter
-    def value(self, value):
-        self._value = value
+    @data.setter
+    def data(self, value):
+        self._data = value
 
-    def left_child_insert(self, node):
+    def l_child_insert(self, node):
         self.left_child = node
 
-    def right_child_insert(self, node):
+    def r_child_insert(self, node):
         self.right_child = node
 
     @property
     def has_children(self):
         """Check if has at least 1 active child"""
-        if self.left_child is not None or self.right_child is not None:
-            return True
-        else:
-            return False
+        return self.left_child is not None or self.right_child is not None
 
     def get_child_list(self):
         child_list = list()
@@ -42,74 +39,98 @@ class Node:
             child_list.append(self.right_child)
         return child_list
 
-    def calculate_sum(self):
-        child_value = 0
+    def most_valuable_child_determine(self):
         if self.has_children:
-            children = self.get_child_list()
+            child_list = self.get_child_list()
 
-            # Say most valuable child is the first one
-            self.most_valuable_child = children[0]
-            for child in children:
-                if child.calculate_sum() > self.most_valuable_child.calculate_sum():
-                    self.most_valuable_child = child
+            for child in child_list:
+                child.most_valuable_child_determine()
 
-            child_value = self.most_valuable_child.value
+            self.bigger_child = child_list[0]
+            if self.bigger_child.calculate() < child_list[1].calculate():
+                self.bigger_child = child_list[1]
+        else:
+            print('{0} has no children'.format(self))
 
-        return self.value + child_value
+    def calculate(self):
+        """
+        Summarize data from every most efficient child down the way
+
+        :return: maximum sum from every most valuable downward nodes
+        """
+        child_value = 0
+        if self.bigger_child:
+            child_value = self.bigger_child.calculate()
+
+            child_value = self.bigger_child.data
+
+        return self.data + child_value
 
     def __repr__(self):
         indexed = False
         if indexed:
-            string = ('(' + '{:>2}'.format(self.depth) + ',' + '{:>2}'.format(self.index) + ') ')
+            string = ('(' + '{:>2}'.format(self.depth) + ',' +
+                      '{:>2}'.format(self.index) + ') ')
         else:
             string = ''
-        string += '{:>4}'.format(self.value)
+        string += '{:>4}'.format(self.data)
         return string
 
     def __str__(self):
-        string = '{:>4}'.format(self.value) + '\n'
+        string = '{:>4}'.format(self.data) + '\n'
         if self.has_children:
-            string += '{:>4}'.format(self.left_child.value) + ' ' + '{:>4}'.format(self.right_child.value)
+            string += '{:>4}'.format(self.left_child.data) + ' ' \
+                      + '{:>4}'.format(self.right_child.data)
         return string
 
 
 class NumberTriangle:
 
-    def __init__(self, number_list_of_lists=None, max_depth=3, randomize=True):
-        self.sequence_list = list()
-        if number_list_of_lists:
-            for dimension, sub_list in enumerate(number_list_of_lists):
-                sequence = [Node(value=value,
-                                 depth=dimension, index=index) for index, value in enumerate(sub_list)]
-                self.sequence_list.append(sequence)
+    def __init__(self, set_of_numbers=None, max_depth=3, randomize=True):
+        self.sequences = list()
+        if set_of_numbers:
+            self._generate_certain_triangle(set_of_numbers)
         elif randomize:
-            # +1 here, because 0th dimension cannot be iterated, so start with 1
-            for dimension in range(max_depth):
-                if dimension:
-                    sequence = [Node(value=randint(0, 100),
-                                     depth=dimension-1, index=index) for index in range(dimension)]
-                    self.sequence_list.append(sequence)
+            self._generate_random_triangle(max_depth)
         else:
-            value = 0
-            for dimension in range(max_depth):
-                sequence = list()
-                for index in range(dimension):
-                    sequence.append(Node(value=value, depth=dimension, index=index))
-                    value += 1
-                self.sequence_list.append(sequence)
+            self._generate_default_triangle(max_depth)
         self._bind_children()
 
+    def _generate_certain_triangle(self, set_of_numbers):
+        for depth, sub_list in enumerate(set_of_numbers):
+            sequence = [Node(number=value, depth=depth, index=index)
+                        for index, value in enumerate(sub_list)]
+            self.sequences.append(sequence)
+
+    def _generate_random_triangle(self, max_depth):
+        for depth in range(max_depth):
+            # 0th depth cannot be iterated, hence start with 1
+            if depth:
+                sequence = [Node(number=randint(0, 100),
+                                 depth=depth - 1,
+                                 index=num)
+                            for num in range(depth)]
+                self.sequences.append(sequence)
+
+    def _generate_default_triangle(self, max_depth):
+        value = 0
+        for depth in range(max_depth):
+            sequence = list()
+            for index in range(depth):
+                node = Node(number=value, depth=depth, index=index)
+                sequence.append(node)
+                value += 1
+            self.sequences.append(sequence)
+
     def _bind_children(self):
-        for sequence_num, sequence in enumerate(self.sequence_list[:-1]):
+        for seq_index, sequence in enumerate(self.sequences[:-1]):
             for index, node in enumerate(sequence):
-                node.left_child_insert(self.sequence_list[sequence_num + 1][index])
-                node.right_child_insert(self.sequence_list[sequence_num + 1][index + 1])
-            # print(index)
-            pass
+                node.l_child_insert(self.sequences[seq_index + 1][index])
+                node.r_child_insert(self.sequences[seq_index + 1][index + 1])
 
     def __str__(self):
         string = 'Triangle\n'
-        for sequence in self.sequence_list:
+        for sequence in self.sequences:
             string += str(sequence) + '\n'
         string += '\n' + '-' * 50
         return string
@@ -118,11 +139,9 @@ class NumberTriangle:
 if __name__ == '__main__':
     triangle = NumberTriangle(max_depth=15)
     print(triangle)
-    print(triangle.sequence_list[4][1])
-    print(triangle.sequence_list[13][1])
 
-    new_triangle = NumberTriangle(number_list_of_lists=[[14], [64, 100], [94, 95, 69]])
+    some_set = ([14], [64, 100], [94, 95, 69])
+    new_triangle = NumberTriangle(set_of_numbers=some_set)
     print(new_triangle)
-
-    # new_triangle.calculate_sum()
-
+    new_triangle.sequences[0][0].most_valuable_child_determine()
+    new_triangle.sequences[2][2].most_valuable_child_determine()
