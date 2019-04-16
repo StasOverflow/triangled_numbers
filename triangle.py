@@ -39,18 +39,16 @@ class Node:
             child_list.append(self.right_child)
         return child_list
 
-    def most_valuable_child_determine(self):
+    def _most_valuable_child_get(self):
+        bigger_child = None
+
         if self.has_children:
             child_list = self.get_child_list()
 
-            for child in child_list:
-                child.most_valuable_child_determine()
-
-            self.bigger_child = child_list[0]
-            if self.bigger_child.calculate() < child_list[1].calculate():
-                self.bigger_child = child_list[1]
-        else:
-            print('{0} has no children'.format(self))
+            bigger_child = child_list[0]
+            if bigger_child.calculate() < child_list[1].calculate():
+                bigger_child = child_list[1]
+        return bigger_child
 
     def calculate(self):
         """
@@ -59,10 +57,11 @@ class Node:
         :return: maximum sum from every most valuable downward nodes
         """
         child_value = 0
-        if self.bigger_child:
-            child_value = self.bigger_child.calculate()
 
-            child_value = self.bigger_child.data
+        if self.has_children:
+
+            child_value = max(self.left_child.calculate(),
+                              self.right_child.calculate())
 
         return self.data + child_value
 
@@ -77,6 +76,9 @@ class Node:
         return string
 
     def __str__(self):
+        """
+        Prints out a node with its children
+        """
         string = '{:>4}'.format(self.data) + '\n'
         if self.has_children:
             string += '{:>4}'.format(self.left_child.data) + ' ' \
@@ -85,9 +87,47 @@ class Node:
 
 
 class NumberTriangle:
+    """
+    Class, used to create triangle with numbers
 
-    def __init__(self, set_of_numbers=None, max_depth=3, randomize=True):
+    Can be created in three different ways:
+        e.g.:
+            1. To create triangle from a certain set of numbers
+                TODO: Check if each subset of a set is incremented by 1,
+                      allowing to build a triangle, not another figure
+
+                - some_set = ([14], [64, 100], [94, 95, 69])
+                  new_triangle = NumberTriangle(set_of_numbers=some_set)
+
+            2. To create triangle, filled with random numbers, but of
+               a certain depth, execute:
+                - triangle = NumberTriangle(max_depth=15, randomize=True)
+
+            2. To create triangle of default values, simply execute
+                - triangle = NumberTriangle()
+                Note: this will give you the same result as:
+                      - some_set = ([0], [1, 2], [3, 4, 5]]
+                      - NumberTriangle(set_of_numbers=some_set)
+
+
+
+    some_set = ([14], [64, 100], [94, 95, 69])
+    new_triangle = NumberTriangle(set_of_numbers=some_set)
+    """
+    def __init__(self, set_of_numbers=None, max_depth=3, randomize=False):
+        """
+
+        :param set_of_numbers:
+        :param max_depth:
+        :param randomize:
+        """
         self.sequences = list()
+        '''
+        workaround, user probably wants to have 3 sequence triangle, when
+        specifies depth as 3
+        '''
+        max_depth = max_depth + 1
+
         if set_of_numbers:
             self._generate_certain_triangle(set_of_numbers)
         elif randomize:
@@ -115,18 +155,33 @@ class NumberTriangle:
     def _generate_default_triangle(self, max_depth):
         value = 0
         for depth in range(max_depth):
-            sequence = list()
-            for index in range(depth):
-                node = Node(number=value, depth=depth, index=index)
-                sequence.append(node)
-                value += 1
-            self.sequences.append(sequence)
+            # 0th depth cannot be iterated, hence start with 1
+            if depth:
+                sequence = list()
+                for index in range(depth):
+                    node = Node(number=value, depth=depth, index=index)
+                    sequence.append(node)
+                    value += 1
+                self.sequences.append(sequence)
 
     def _bind_children(self):
         for seq_index, sequence in enumerate(self.sequences[:-1]):
             for index, node in enumerate(sequence):
                 node.l_child_insert(self.sequences[seq_index + 1][index])
                 node.r_child_insert(self.sequences[seq_index + 1][index + 1])
+
+    def max_sum_for_node_get(self, x=0, y=0):
+        """
+        Calculates biggest sum from downward nodes for a certain node
+
+        Note: leaving default parameters, means to count from the root node
+
+        :param x: x coordinate of triangle's node (most left is 0)
+        :param y: y coordinate of triangle's node (most top is 0)
+        :return: biggest sum, collected from all downward nodes
+        """
+        node = self.sequences[y][x]
+        return node.calculate()
 
     def __str__(self):
         string = 'Triangle\n'
@@ -137,11 +192,16 @@ class NumberTriangle:
 
 
 if __name__ == '__main__':
-    triangle = NumberTriangle(max_depth=15)
-    print(triangle)
+
+    def_triangle = NumberTriangle()
+    print(def_triangle)
+    print('final sum is {0}\n\n'.format(def_triangle.max_sum_for_node_get()))
+
+    rand_triangle = NumberTriangle(max_depth=15, randomize=True)
+    print(rand_triangle)
+    print('final sum is {0}\n\n'.format(rand_triangle.max_sum_for_node_get()))
 
     some_set = ([14], [64, 100], [94, 95, 69])
-    new_triangle = NumberTriangle(set_of_numbers=some_set)
-    print(new_triangle)
-    new_triangle.sequences[0][0].most_valuable_child_determine()
-    new_triangle.sequences[2][2].most_valuable_child_determine()
+    cert_triangle = NumberTriangle(set_of_numbers=some_set)
+    print(cert_triangle)
+    print('final sum is {0}\n\n'.format(cert_triangle.max_sum_for_node_get()))
